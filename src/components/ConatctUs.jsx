@@ -35,20 +35,20 @@ export const ContactUs = () => {
               Get in Touch
             </Typography>
             <Typography variant="body1" sx={{ mb: 1 }}>
-              📍 Address: 123 Food Street, Flavor City, Yumland
+              📍 Address: 123 Food Street, Nagercoil City, Kanyakumari
             </Typography>
             <Typography variant="body1" sx={{ mb: 1 }}>
               📞 Phone: +91 98765 43210
             </Typography>
             <Typography variant="body1" sx={{ mb: 1 }}>
-              📧 Email: support@weeshop.com
+              📧 Email: support@freshfeast.com
             </Typography>
 
             {/* Optional: Google Map Embed */}
             <Box sx={{ mt: 3 }}>
               <iframe
                 title="map"
-                src="https://maps.google.com/maps?q=chennai&t=&z=13&ie=UTF8&iwloc=&output=embed"
+                src="https://maps.google.com/maps?q=kanyakumari,nagercoil&t=&z=13&ie=UTF8&iwloc=&output=embed"
                 width="100%"
                 height="250"
                 style={{ border: 0 }}

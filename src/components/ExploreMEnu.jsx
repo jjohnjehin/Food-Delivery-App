@@ -1,5 +1,5 @@
-import React from "react";
-import { useLocation,useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Box,
   Card,
@@ -7,22 +7,56 @@ import {
   CardContent,
   Typography,
   Button,
-  Chip,
+  Grid
 } from "@mui/material";
-import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import FavoriteIcon from '@mui/icons-material/Favorite';
-import data from "./db.json";
-
+import { Footer } from "./Footer";
 export const ExploreMenu = ({ cart, setCart, fav = [], setFav }) => {
-  const navigate=useNavigate()
+  const navigate = useNavigate();
   const location = useLocation();
-  const category = location.state?.category;
-  const slogan=location.state?.slogan
+  const slogan = location.state?.slogan;
+  const category = location.state?.category || "";
+  const image=location.state?.image
+  const restaurent_name=location.state?.restaurent_name
+  const dish_name=location.state?.dish_name
+  const price=location.state?.price
 
-  const filteredItems = data.filter((item) => item.category.toLowerCase() === category.toLowerCase());
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [cardData, setCardData] = useState([]);
 
-  console.log(filteredItems);
-  console.log(category)
+ useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        const response = await fetch("http://localhost:3001/products");
+        if (!response.ok) {
+          throw new Error("Failed to fetch data");
+        }
+        const result = await response.json();
+        console.log(result); // Log the result to check its structure
+        // Ensure result is an array
+        if (!Array.isArray(result)) {
+          throw new TypeError("Expected an array from the API response");
+        }
+        const filtered = category
+          ? result.filter(
+              (item) =>
+                item.category?.toLowerCase() === category.toLowerCase()
+            )
+          : result;
+        setCardData(filtered);
+        console.log(filtered);
+      } catch (err) {
+        setError(err.message || "Something went wrong");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [category]);
 
   const addToCart = (item) => {
     setCart([...cart, item]);
@@ -36,6 +70,32 @@ export const ExploreMenu = ({ cart, setCart, fav = [], setFav }) => {
       setFav([...fav, item]);
     }
   };
+  
+   const FOUR_HOURS_IN_SECONDS = 4 * 60 * 60;
+  const [secondsLeft, setSecondsLeft] = useState(FOUR_HOURS_IN_SECONDS);
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setSecondsLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer); // clean up
+  }, []);
+  const formatTime = (secs) => {
+    const hours = Math.floor(secs / 3600);
+    const minutes = Math.floor((secs % 3600) / 60);
+    const seconds = secs % 60;
+    return `${String(hours).padStart(2, '0')}h:${String(minutes).padStart(
+      2,
+      '0'
+    )}m:${String(seconds).padStart(2, '0')}s`;
+  };
+
 
   return (
     <Box
@@ -48,52 +108,72 @@ export const ExploreMenu = ({ cart, setCart, fav = [], setFav }) => {
         alignItems: "center",
       }}
     >
-      <Box sx={{width:"100%",height:"100px",display:'flex',justifyContent:"center",alignItems:'center'}}>
-        <Box sx={{width:"85%",height:"70%"}}>
-          <Typography variant="h5" sx={{fontWeight:'700'}}>{category}</Typography>
-          <Typography>{slogan}</Typography>
+      <Box sx={{ width: "100%", height: "100px", display: 'flex', justifyContent: "center", alignItems: 'center' }}>
+        <Box sx={{ width: "78%", height: "70%" }}>
+          <Typography variant="h5" sx={{ fontWeight: '700' }}>Offers For You</Typography>
+        </Box>
+      </Box>
+      <Box sx={{width:"100%",height:"250px",display:"flex",justifyContent:"center"}}>
+        <Box sx={{width:"78%",height:"100%",borderRadius:"30px",background: "linear-gradient(358deg,rgba(168, 168, 168, 1) 0%, rgba(201, 201, 201, 1) 25%, rgba(247, 247, 245, 1) 48%)",display:"flex",
+          justifyContent:"center",alignItems:"center"
+        }}>
+          <Grid container sx={{width:"97%",height:"85%",bgcolor:"white",border:"1px solid grey",borderRadius:"30px",overflow:"hidden",display:"flex",gap:2}}>
+            <Grid item size={{lg:4.7}} sx={{width:"100%",height:"100%",display:"flex",alignItems:"center"}}>
+              <Grid sx={{width:"45%",height:"90%",borderRadius:"20px",marginLeft:"10px",backgroundImage: `url(${image})`,backgroundSize:"cover",backgroundPosition:"center"}}></Grid>
+              <Grid sx={{marginLeft:"10px"}}>
+                <Typography sx={{fontSize:"20px",fontWeight:"600",textDecoration:"underline"}}>{category}</Typography>
+                <Typography sx={{fontSize:"22px",fontWeight:"700",color:'green'}}>{dish_name}</Typography>
+                <Typography sx={{fontWeight:"600",color:"#f72585"}}>{restaurent_name}</Typography>
+                <Typography>₹{price}</Typography>
+              </Grid>
+            </Grid>
+            <Grid item size={{lg:3.7}} sx={{width:"100%",height:"100%",display:"flex",flexDirection:"column",justifyContent:"center"}}>
+              {/* <Typography sx={{fontSize:"23px",fontWeight:"600"}}>Offers Only For You</Typography> */}
+              <Typography sx={{fontSize:"21px",fontWeight:"600",color:'#e09f3e'}}>Buy Two For ₹{price*2-50}</Typography>
+              <Button variant="contained" sx={{width:"130px",bgcolor:'black'}}>Check Out</Button>
+            </Grid>
+            <Grid item size={{lg:2}} sx={{width:"100%",height:"100%",display:"flex",flexDirection:'column',justifyContent:'center'}}>
+              <Typography sx={{fontWeight:"600",fontSize:"20px",color:"grey"}}>Sale Ends In</Typography>
+              <Typography sx={{fontWeight:"600",fontSize:"20px",color:"grey"}}>{formatTime(secondsLeft)}</Typography>
+            </Grid>
+          </Grid>
         </Box>
       </Box>
 
-      {/* Top Picks Header */}
       <Box
         sx={{
           width: "100%",
-          // maxWidth: "1200px",
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
           px: 1,
-          mb: 2,
+          mb: 2,marginTop:"50px"
         }}
       >
-        <Box sx={{width:"85%",height:"50px"}}>
-        <Typography variant="h5" fontWeight={700}>
-          Restaurents to explore
-        </Typography>
+        <Box sx={{ width: "78%", height: "50px" }}>
+          <Typography variant="h5" fontWeight={700}>
+            Restaurents to explore
+          </Typography>
         </Box>
       </Box>
 
-      {/* Food Cards or No Data Message */}
       <Box
         sx={{
           width: { xs: "95%", sm: "90%", md: "85%" },
           mx: "auto",
           display: "flex",
           flexWrap: "wrap",
-          // justifyContent: "center",
           gap: 3,
-          boxSizing: "border-box",
+          boxSizing: "border-box",justifyContent:"center"
         }}
       >
-        {filteredItems.length > 0 ? (
-          filteredItems.map((item) => (
+        {cardData.length > 0 ? (
+          cardData.map((item) => (
             <Card
               key={item.id}
               sx={{
                 width: { lg: "280px", sm: "280px", xs: "280px" },
                 height: "330px",
-                // borderRadius: "10px",
                 boxShadow: 3,
                 display: "flex",
                 flexDirection: "column",
@@ -152,20 +232,42 @@ export const ExploreMenu = ({ cart, setCart, fav = [], setFav }) => {
                 <Box
                   sx={{
                     display: "flex",
-                    flexDirection: { xs: "column", sm: "row" }, // column on mobile, row on larger screens
-                    gap: 1, // spacing between buttons
+                    flexDirection: { xs: "column", sm: "row" },
+                    gap: 1,
                     mt: 1,
-                    width: "100%", // ensures it stretches inside the card
+                    width: "100%",
                   }}
                 >
                   <Button
                     variant="contained"
                     sx={{
-                      bgcolor:"white",
-                      color:"orange",
+                      bgcolor: "white",
+                      color: "orange",
                       width: { xs: "100%", sm: "auto" },
-                      fontWeight:"700"}}onClick={() => addToCart(item)}>Add to Cart</Button>
-                  <Button variant="contained"sx={{bgcolor: "white",color: "green",width: { xs: "100%", sm: "auto" },fontWeight: "700"}}onClick={() => {console.log(item?.price);navigate("/Payment", {state: {category: item?.price,id: item?.id}});}}>Buy Now</Button></Box>
+                      fontWeight: "700"
+                    }}
+                    onClick={() => addToCart(item)}
+                  >
+                    Add to Cart
+                  </Button>
+                  <Button
+                    variant="contained"
+                    sx={{
+                      bgcolor: "white",
+                      color: "green",
+                      width: { xs: "100%", sm: "auto" },
+                      fontWeight: "700"
+                    }}
+                    onClick={() => {
+                      console.log(item?.price);
+                      navigate("/Payment", {
+                        state: { category: item?.price, id: item?.id,slogan,restaurent_name,dish_name,image }
+                      });
+                    }}
+                  >
+                    Buy Now
+                  </Button>
+                </Box>
               </CardContent>
             </Card>
           ))
@@ -178,6 +280,7 @@ export const ExploreMenu = ({ cart, setCart, fav = [], setFav }) => {
           </Typography>
         )}
       </Box>
+      <Footer/>
     </Box>
   );
 };

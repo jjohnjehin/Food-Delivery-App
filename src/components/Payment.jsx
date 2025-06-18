@@ -14,7 +14,7 @@ import {
 export const Payment = () => {
   const navigate=useNavigate()
   const location = useLocation();
-const { category, id } = location.state || {};
+const { category, id,slogan, } = location.state || {};
   console.log(category)
 
   return (

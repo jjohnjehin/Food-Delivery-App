@@ -1,601 +1,335 @@
-import React from "react";
-import { useLocation ,useNavigate} from "react-router-dom";
-import { useState } from "react";
-import { Box, Card, CardMedia, CardContent, Typography, Button,Stack,Chip,Rating,IconButton } from "@mui/material";
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import LocalOfferIcon from '@mui/icons-material/LocalOffer';
-// import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
-// import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
-// import StarIcon from '@mui/icons-material/Star';
-import data from "./db.json"
-import FavoriteIcon from "@mui/icons-material/Favorite";
-import StarIcon from "@mui/icons-material/Star";
-// import AccessTimeIcon from "@mui/icons-material/AccessTime";
-import { ArrowBackIos, ArrowForwardIos } from "@mui/icons-material";
-import { useRef } from "react";
-const foodItems = [
-  {
-    id: 1,
-    name: "Plate Shawarma",
-    price: 180,
-    img: "https://img.freepik.com/premium-photo/fried-chicken-with-french-fries-fire-smoke-dark-background_674594-1601.jpg?w=826",
-  },
-  {
-    id: 2,
-    name: "Family Combo 1",
-    price: 550,
-    img: "https://spoonnspice.com/wp-content/uploads/2023/04/Untitled-design-53.webp",
-  },
-  {
-    id: 3,
-    name: "Zinger Burger",
-    price: 250,
-    img: "https://img.freepik.com/premium-photo/different-flavors-ice-cream-scooped-one-bowl_419341-96071.jpg",
-  },
-  {
-    id: 4,
-    name: "Loaded Fries",
-    price: 160,
-    img: "https://img.freepik.com/premium-photo/blender-with-fruit-flying-isolated-black-background-fruit-juice-splash-generataive-ai_741672-1398.jpg?w=360",
-  },
-];
-
-export const Item = ({ cart, setCart,fav,setFav }) => {
-  const scrollRef = useRef(null);
-
-  const scroll = (direction) => {
-    const container = scrollRef.current;
-    if (container) {
-      const cardWidth = container.firstChild?.offsetWidth || 300; // fallback
-      container.scrollBy({
-        left: direction * (cardWidth + 16), // 16 = gap
-        behavior: "smooth",
-      });
-    }
-  };
-  
+import React, { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import {
+  Box,
+  Card,
+  CardMedia,
+  CardContent,
+  Typography,
+  Button,
+  Grid
+} from "@mui/material";
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
+import Slider from "react-slick";
+import { Footer } from "./Footer";
+export const Item = ({ cart, setCart, fav = [], setFav }) => {
+  const navigate = useNavigate();
   const location = useLocation();
-  const category = location.state?.category;
-  console.log(category)
-  const id=location.state?.id
+  const slogan = location.state?.slogan;
+  const category = location.state?.category || "";
+  const image=location.state?.image
+  const restaurent_name=location.state?.restaurent_name
+  const dish_name=location.state?.dish_name
+  const price=location.state?.price
 
-  console.log("🔥 Category received:", category);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [cardData, setCardData] = useState([]);
 
-  // Filter items that match the category
-  const filteredItems = data.filter((item) => item.category === category);
+ useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        const response = await fetch("http://localhost:3001/products");
+        if (!response.ok) {
+          throw new Error("Failed to fetch data");
+        }
+        const result = await response.json();
+        console.log(result); // Log the result to check its structure
+        // Ensure result is an array
+        if (!Array.isArray(result)) {
+          throw new TypeError("Expected an array from the API response");
+        }
+        const filtered = category
+          ? result.filter(
+              (item) =>
+                item.category?.toLowerCase() === category.toLowerCase()
+            )
+          : result;
+        setCardData(filtered);
+        console.log(filtered);
+      } catch (err) {
+        setError(err.message || "Something went wrong");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [category]);
 
   const addToCart = (item) => {
     setCart([...cart, item]);
   };
-  const itemDetails = data.find((item) => item.id === id);
 
-console.log(itemDetails?.restaurant_name);
-const toggleFav = (item) => {
-  const isFav = fav.some((f) => f.id === item.id);
-  if (isFav) {
-    setFav(fav.filter((f) => f.id !== item.id));
-  } else {
-    setFav([...fav, item]);
-  }
-};
-const [quantity, setQuantity] = useState(1);
-
-  const handleIncrease = () => {
-    setQuantity((prev) => prev + 1);
-  };
-
-  const handleDecrease = () => {
-    if (quantity > 1) {
-      setQuantity((prev) => prev - 1);
+  const toggleFav = (item) => {
+    const isFav = fav.some(f => f.id === item.id);
+    if (isFav) {
+      setFav(fav.filter(f => f.id !== item.id));
+    } else {
+      setFav([...fav, item]);
     }
   };
+  
+   const FOUR_HOURS_IN_SECONDS = 4 * 60 * 60;
+  const [secondsLeft, setSecondsLeft] = useState(FOUR_HOURS_IN_SECONDS);
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setSecondsLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
 
-  const tax = Math.floor((itemDetails?.price || 0) * 0.05);
-  const total = (itemDetails?.price || 0) * quantity + tax;
-  const navigate=useNavigate()
+    return () => clearInterval(timer); // clean up
+  }, []);
+  const formatTime = (secs) => {
+    const hours = Math.floor(secs / 3600);
+    const minutes = Math.floor((secs % 3600) / 60);
+    const seconds = secs % 60;
+    return `${String(hours).padStart(2, '0')}h:${String(minutes).padStart(
+      2,
+      '0'
+    )}m:${String(seconds).padStart(2, '0')}s`;
+  };
+ const settings = {
+    arrows: true,   
+    dots: true,    
+    infinite: true,
+    speed: 500,
+    autoplay: true,       
+    autoplaySpeed: 2000, 
+    slidesToShow: 1,
+    slidesToScroll: 1,
+  };
+
+  const images = [
+  {
+    url: "https://static.vecteezy.com/system/resources/previews/022/454/679/non_2x/mix-fruit-juice-in-a-glass-with-fresh-fruits-generative-ai-free-photo.jpg",
+    slogan: "Freshness in Every Sip 🍓🍊",
+    price: "120",
+  },
+  {
+    url: "https://images.squarespace-cdn.com/content/v1/5fdae31100d35c18cdbbd534/1663502974402-Q5P1NCEZ9QIN6Q47HFFO/IMG_1364.JPG",
+    slogan: "Deliciously Homemade Flavours 🍽️",
+    price: "180",
+  },
+  {
+    url: "https://img.freepik.com/premium-photo/yummy-french-fries_693425-7982.jpg",
+    slogan: "Crispy Fries, Happy Vibes 🍟",
+    price: "99",
+  },
+];
 
 
   return (
     <Box
-    sx={{
-      mt: "120px",
-      px: 2,
-      width: "100%",
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-    }}
-  >
-    {/* Details Section */}
-    <Box sx={{ width: "100%", maxWidth: "1000px" }}>
-    <Card
       sx={{
-        borderRadius: 4,
-        mb: 3,
-        boxShadow: 3,
-        display: "flex",
-        flexDirection: { xs: "column", md: "row" },
-        height: { md: 250 },
-      }}
-    >
-      {/* Column 1: Image */}
-      <Box
-        sx={{
-          width: { xs: "100%", md: "30%" },
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          p: 2,
-        }}
-      >
-        <Box
-          component="img"
-          src={itemDetails?.image}
-          alt={itemDetails?.dish_name}
-          sx={{
-            width: "100%",
-            height: "auto",
-            borderRadius: 3,
-            maxHeight: 200,
-            objectFit: "cover",
-          }}
-        />
-      </Box>
-
-      {/* Column 2: Details */}
-      <CardContent
-        sx={{
-          flex: 1,
-          width: { xs: "100%", md: "40%" },
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-        }}
-      >
-        {itemDetails ? (
-          <Typography variant="h5" fontWeight={600}>
-            {itemDetails.restaurant_name}
-          </Typography>
-        ) : (
-          <Typography variant="h6" color="error">
-            Restaurant not found
-          </Typography>
-        )}
-
-        <Stack direction="row" spacing={2} alignItems="center" mt={1}>
-          <Chip
-            icon={<StarIcon sx={{ color: "white" }} />}
-            label={`${itemDetails.rating} (478 reviews)`}
-            color="success"
-            size="small"
-            sx={{ color: "white" }}
-          />
-          <Typography variant="body2">
-            • ₹{itemDetails.price * 2 - 49} for two
-          </Typography>
-        </Stack>
-
-        <Typography sx={{ color: "red", mt: 1 }}>
-          {itemDetails?.dish_name}
-        </Typography>
-
-        <Typography variant="body2" mt={1}>
-          <strong>Outlet:</strong> Veppamoodu
-        </Typography>
-
-        <Stack direction="row" alignItems="center" spacing={1} mt={1}>
-          <AccessTimeIcon fontSize="small" />
-          <Typography variant="body2">30–35 mins</Typography>
-        </Stack>
-      </CardContent>
-
-      {/* Column 3: Bill Summary */}
-      <Box
-  sx={{
-    width: "100%", // Full width on small screens
-    maxWidth: { md: "30%",xs:"90%",sm:"90%" }, // Restrict width only on medium and up
-    borderTop: { xs: "1px solid #ddd", md: "none" }, // Top border on mobile
-    borderLeft: { md: "1px solid #ddd" }, // Left border on desktop
-    mt: { xs: 2, md: 0 }, // Top margin only on mobile
-    p: 2,
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "space-between",
-  }}
->
-  <Box>
-    <Typography variant="h6" fontWeight="bold" mb={1}>
-      Bill Summary
-    </Typography>
-
-    {/* Quantity Selector */}
-    <Stack
-      direction="row"
-      spacing={2}
-      alignItems="center"
-      justifyContent="space-between"
-      mb={1}
-      flexWrap="wrap"
-    >
-      <Typography>Quantity</Typography>
-      <Stack direction="row" spacing={1} alignItems="center">
-        <Button variant="outlined" size="small" onClick={handleDecrease}>
-          -
-        </Button>
-        <Typography>{quantity}</Typography>
-        <Button variant="outlined" size="small" onClick={handleIncrease}>
-          +
-        </Button>
-      </Stack>
-    </Stack>
-
-    <Stack direction="row" justifyContent="space-between" flexWrap="wrap">
-      <Typography>Price</Typography>
-      <Typography>₹{itemDetails?.price * quantity}</Typography>
-    </Stack>
-    <Stack direction="row" justifyContent="space-between" flexWrap="wrap">
-      <Typography>Tax</Typography>
-      <Typography>₹{tax}</Typography>
-    </Stack>
-    <Stack direction="row" justifyContent="space-between" mt={1} flexWrap="wrap">
-      <Typography fontWeight="bold">Total</Typography>
-      <Typography fontWeight="bold">₹{total}</Typography>
-    </Stack>
-  </Box>
-
-  <Button
-    variant="contained"
-    color="success"
-    sx={{ mt: 2, width: "100%" }}
-    onClick={()=>{
-      console.log(itemDetails.price)
-      navigate('/Payment',{
-        state: {
-          category: total
-        }
-      })
-    }}
-  >
-    Proceed
-  </Button>
-</Box>
-
-    </Card>
-
-      {/* Deals Section */}
-      <Typography variant="h6" fontWeight={600} mb={1}>
-        Deals for you
-      </Typography>
-      <Box
-        sx={{
-          display: "flex",
-          gap: 2,
-          overflowX: "auto",
-          pb: 1,
-          width: "100%",
-        }}
-      >
-        <Card
-          sx={{
-            minWidth: 220,
-            flexShrink: 0,
-            p: 2,
-            display: "flex",
-            gap: 2,
-            alignItems: "center",
-            backgroundColor: "#ede7f6",
-          }}
-        >
-          <Chip label="SAVE X2" color="primary" size="small" />
-          <Box>
-            <Typography fontWeight={600}>Extra ₹20 Off</Typography>
-            <Typography variant="body2" color="text.secondary">
-              Applicable over & above coupons
-            </Typography>
-          </Box>
-        </Card>
-
-        <Card
-          sx={{
-            minWidth: 220,
-            flexShrink: 0,
-            p: 2,
-            display: "flex",
-            gap: 2,
-            alignItems: "center",
-            backgroundColor: "#fff3e0",
-          }}
-        >
-          <Chip
-            icon={<LocalOfferIcon />}
-            label="%"
-            color="warning"
-            size="small"
-          />
-          <Box>
-            <Typography fontWeight={600}>40% Off Upto ₹80</Typography>
-            <Typography variant="body2" color="text.secondary">
-              USE SWIGGYIT
-            </Typography>
-          </Box>
-        </Card>
-        <Card
-  sx={{
-    minWidth: 250,
-    p: 2,
-    display: 'flex',
-    alignItems: 'center',
-    borderRadius: '20px',
-    border: '1px solid #ddd',
-    backgroundColor: 'white',
-    boxShadow: 1,
-    gap: 2,
-    flexShrink: 0,
-  }}
->
-  {/* Left badge */}
-  <Box
-    sx={{
-      width: 50,
-      height: 50,
-      backgroundColor: '#5e35b1',
-      color: 'white',
-      fontWeight: 700,
-      fontSize: 12,
-      borderRadius: '50%',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      flexDirection: 'column',
-      textAlign: 'center',
-      lineHeight: 1,
-    }}
-  >
-    SAVE<br />X2
-  </Box>
-
-  {/* Text content */}
-  <Box>
-    <Typography fontWeight="bold" fontSize="1rem">
-      Extra ₹66 Off
-    </Typography>
-    <Typography variant="body2" color="text.secondary">
-      Applicable over & above coupons
-    </Typography>
-  </Box>
-</Card>
-
-      </Box>
-    </Box>
-
-    {/* Line */}
-    <Box sx={{ width: "100%", height: "1px", bgcolor: "grey", my: 3 }} />
-
-    {/* ADDVERTISEMENT */}
-    <Box sx={{ my: 4 ,width:{lg:"83%",xs:"300px",sm:"95%"}}}>
-      {/* Header */}
-      <Stack
-        direction="row"
-        justifyContent="space-between"
-        alignItems="center"
-        sx={{
-          mb: 2,
-          px: { xs: 1, sm: 2, md: 4 },
-          width:"83%"
-        }}
-      >
-        <Typography variant="h6" fontWeight="bold">
-          Top Picks
-        </Typography>
-        <Stack direction="row" spacing={1}>
-          <IconButton onClick={() => scroll(-1)}>
-            <ArrowBackIos />
-          </IconButton>
-          <IconButton onClick={() => scroll(1)}>
-            <ArrowForwardIos />
-          </IconButton>
-        </Stack>
-      </Stack>
-
-      {/* Scrollable Cards */}
-      <Box
-        ref={scrollRef}
-        sx={{
-          display: "flex",
-          overflow: "hidden", // hide scrollbars
-          px: { xs: 1, sm: 2, md: 4 },
-          gap: 2,
-          width:"83%",
-        }}
-      >
-        {foodItems.map((item) => (
-          <Card
-            key={item.id}
-            sx={{
-              flex: "0 0 auto",
-              width: {
-                xs: "80%",
-                sm: "45%", // only 2 cards max
-                md: "45%",
-              },
-              minWidth: "300px",
-              borderRadius: 3,
-              boxShadow: 3,
-              position: "relative",
-              backgroundImage: `url(${item.img})`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-              height: "350px",
-            }}
-          >
-            {/* <CardMedia
-              component="img"
-              height="160"
-              image={item.img}
-              alt={item.name}
-              sx={{ objectFit: "cover" ,backgroundRepeat:"no-repeat"}}
-            /> */}
-            <CardContent>
-              <Typography fontWeight="bold" mb={1} sx={{color:"white"}}>
-                {item.name}
-              </Typography>
-              <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <Typography sx={{color:"white"}}>₹{item.price}</Typography>
-                <Stack
-                  direction="row"
-                  alignItems="center"
-                  spacing={1}
-                  sx={{ background: "#f5f5f5", px: 1, borderRadius: 1 }}
-                >
-                  <Button size="small">−</Button>
-                  <Typography>1</Typography>
-                  <Button size="small">+</Button>
-                </Stack>
-              </Stack>
-            </CardContent>
-          </Card>
-        ))}
-      </Box>
-
-    </Box>
-    <Box sx={{width:"100%",height:'100px',display:'flex',justifyContent:"center"}}>
-      <Box sx={{height:"2px",width:"83%",bgcolor:"grey"}}></Box>
-    </Box>
-    <Box
-      sx={{
+        mt: "120px",
+        px: 2,
         width: "100%",
-        // maxWidth: "1200px",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        // px: 1,
-        mb: 2,
-      }}
-    >
-      <Box sx={{width:"83%",height:"100%"}}>
-      <Typography variant="h5" fontWeight={700}>
-        Recommended
-      </Typography>
-      </Box>
-    </Box>
-
-    {/* Food Cards */}
-    <Box
-  sx={{
-    width: { xs: "95%", sm: "90%", md: "85%", lg: "83%" },
-    mx: "auto",
-    display: "flex",
-    flexWrap: "wrap",
-    // justifyContent: "center",
-    gap: 3,
-    boxSizing: "border-box",
-  }}
->
-  {filteredItems.map((item) => (
-    <Card
-      key={item.id}
-      sx={{
-        width: { xs: "280px", sm: "280px", lg: "280px" },
-        height:"330px",
-        // borderRadius: "10px",
-        // boxShadow: 3,
         display: "flex",
         flexDirection: "column",
-        alignItems: "flex-start",
-        transition: "transform 0.3s ease-in-out",
-        '&:hover': {
-          transform: 'translate(-10px, -10px)',
-        },
+        alignItems: "center",
       }}
     >
-      {/* 👇 Image container with fixed height */}
+      <Box sx={{ width: "100%", height: "100px", display: 'flex', justifyContent: "center", alignItems: 'center' }}>
+        <Box sx={{ width: "78%", height: "70%" }}>
+          <Typography variant="h4" sx={{ fontWeight: '700',fontsize:"20px" }}>Deals You Can't Miss</Typography>
+        </Box>
+      </Box>
+      <Box sx={{ width: "100%", height: "350px", display: "flex", justifyContent: "center" }}>
+      <Grid sx={{ width: "78%", height: "100%", bgcolor: "pink", overflow: "hidden", borderRadius: "20px" }}>
+        <Slider {...settings}>
+          {images.map((item, index) => (
+            <Box key={index} sx={{ position: "relative" }}>
+              <img
+                src={item.url}
+                alt={`Slide ${index + 1}`}
+                style={{
+                  width: "100%",
+                  height: "350px",
+                  objectFit: "cover",
+                  borderRadius: "20px",
+                }}
+              />
+              <Box
+                sx={{
+                  position: "absolute",
+                  bottom: 0,
+                  width: "100%",
+                  bgcolor: "rgba(0, 0, 0, 0.5)",
+                  color: "white",
+                  p: 2,
+                  textAlign: "center",
+                  borderBottomLeftRadius: "20px",
+                  borderBottomRightRadius: "20px",height:"70px",width:'100%'
+                }}
+              >
+                <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+                  {item.slogan}
+                </Typography>
+                <Typography variant="subtitle1">Buy Two for <span style={{fontSize:"25px"}}>₹{parseInt(item.price.replace("₹", "")) * 2 - 39}</span></Typography>
+                <Button variant="contained" sx={{bgcolor:'yellow',color:'black',position:'absolute',right:"80px",top:"35px"}} onClick={() => {
+                      console.log(item?.price);
+                      navigate("/Payment", {
+                        state: { category: item?.price, id: item?.id }
+                      });
+                    }}>Buy Now</Button>
+              </Box>
+            </Box>
+          ))}
+        </Slider>
+      </Grid>
+    </Box>
+
       <Box
         sx={{
           width: "100%",
-          height: "180px",
-          overflow: "hidden",
-          position: "relative", // So heart icon can be positioned inside
-          // borderTopLeftRadius: "10px",
-          // borderTopRightRadius: "10px",
-        }}
-      >
-        <CardMedia
-          component="img"
-          sx={{
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-          }}
-          image={item.image}
-          alt={item.dish_name}
-        />
-
-        {/* ❤️ Favorite Icon */}
-        <FavoriteIcon
-          onClick={() => toggleFav(item)}
-          sx={{
-            color: fav?.some((f) => f.id === item.id) ? "red" : "gray",
-            position: "absolute",
-            top: "10px",
-            right: "10px",
-            zIndex: 2,
-            backgroundColor: "#fff",
-            borderRadius: "50%",
-            padding: "5px",
-            cursor: "pointer",
-            boxShadow: 1,
-          }}
-        />
-      </Box>
-
-      <CardContent
-        sx={{
-          flexGrow: 1,
           display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-evenly",
-          alignItems: "flex-start",
-          textAlign: "center",
-          p: 2,
+          justifyContent: "center",
+          alignItems: "center",
+          px: 1,
+          mb: 2,marginTop:"50px"
         }}
       >
-        <Typography fontWeight="bold">{item.restaurant_name}</Typography>
-        <Typography variant="subtitle1" color="text.secondary">
-          {item.dish_name}
-        </Typography>
-        <Typography variant="body2">⭐ {item.rating}</Typography>
-        <Typography
-          variant="h6"
-          sx={{ color: "green", marginTop: "10px" }}
-        >
-          ₹{item.price}
-        </Typography>
-
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: { xs: "column", sm: "row" }, // column on mobile, row on larger screens
-            gap: 1, // spacing between buttons
-            mt: 1,
-            width: "100%", // ensures it stretches inside the card
-          }}
-        >
-          <Button
-            variant="contained"
-            sx={{
-              bgcolor:"white",
-              color:"orange",
-              width: { xs: "100%", sm: "auto" },
-              fontWeight:"700"}}onClick={() => addToCart(item)}>Add to Cart</Button>
-          <Button variant="contained"sx={{bgcolor: "white",color: "green",width: { xs: "100%", sm: "auto" },fontWeight: "700"}}onClick={() => {console.log(item?.price);navigate("/Payment", {state: {category: item?.price,id: item?.id}});}}>Buy Now</Button>
+        <Box sx={{ width: "78%", height: "50px" }}>
+          <Typography variant="h5" fontWeight={700}>
+            Restaurents to explore
+          </Typography>
+        </Box>
       </Box>
 
-      </CardContent>
-    </Card>
-  ))}
-</Box>
+      <Box
+        sx={{
+          width: { xs: "95%", sm: "90%", md: "85%" },
+          mx: "auto",
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 3,
+          boxSizing: "border-box",justifyContent:"center"
+        }}
+      >
+        {cardData.length > 0 ? (
+          cardData.map((item) => (
+            <Card
+              key={item.id}
+              sx={{
+                width: { lg: "280px", sm: "280px", xs: "280px" },
+                height: "330px",
+                boxShadow: 3,
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-around",
+                position: 'relative',
+                transition: "transform 0.3s ease-in-out",
+                "&:hover": {
+                  transform: "translate(-10px, -10px)",
+                },
+              }}
+            >
+              <FavoriteIcon
+                onClick={() => toggleFav(item)}
+                sx={{
+                  color: fav.some(f => f.id === item.id) ? "red" : "white",
+                  position: 'absolute',
+                  top: '10px',
+                  right: '10px',
+                  zIndex: 2,
+                  backgroundColor: 'rgba(0,0,0,0.4)',
+                  borderRadius: '50%',
+                  padding: '5px',
+                  cursor: 'pointer'
+                }}
+              />
 
-  </Box>
+              <CardMedia
+                component="img"
+                sx={{ height: "130px", objectFit: "cover" }}
+                image={item.image}
+                alt={item.dish_name}
+              />
+
+              <CardContent
+                sx={{
+                  flexGrow: 1,
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-evenly",
+                  alignItems: "flex-start",
+                  textAlign: "center",
+                  p: 2,
+                }}
+              >
+                <Typography fontWeight="bold">{item.restaurant_name}</Typography>
+                <Typography variant="subtitle1" color="text.secondary">
+                  {item.dish_name}
+                </Typography>
+                <Typography variant="body2">⭐ {item.rating}</Typography>
+                <Typography
+                  variant="h6"
+                  sx={{ color: "green", marginTop: "10px" }}
+                >
+                  ₹{item.price}
+                </Typography>
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: { xs: "column", sm: "row" },
+                    gap: 1,
+                    mt: 1,
+                    width: "100%",
+                  }}
+                >
+                  <Button
+                    variant="contained"
+                    sx={{
+                      bgcolor: "white",
+                      color: "orange",
+                      width: { xs: "100%", sm: "auto" },
+                      fontWeight: "700"
+                    }}
+                    onClick={() => addToCart(item)}
+                  >
+                    Add to Cart
+                  </Button>
+                  <Button
+                    variant="contained"
+                    sx={{
+                      bgcolor: "white",
+                      color: "green",
+                      width: { xs: "100%", sm: "auto" },
+                      fontWeight: "700"
+                    }}
+                    onClick={() => {
+                      console.log(item?.price);
+                      navigate("/Payment", {
+                        state: { category: item?.price, id: item?.id }
+                      });
+                    }}
+                  >
+                    Buy Now
+                  </Button>
+                </Box>
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          <Typography
+            variant="h6"
+            sx={{ mt: 4, color: "gray", textAlign: "center", width: "100%" }}
+          >
+            No related items available 😔
+          </Typography>
+        )}
+      </Box>
+      <Footer/>
+    </Box>
   );
 };
-

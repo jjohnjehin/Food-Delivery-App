@@ -1,5 +1,5 @@
-import { Box, Grid, Button, Typography, TextField, IconButton } from "@mui/material"
-import { useState, useRef } from "react";
+import { Box, Grid, Button, Typography, TextField, IconButton,Tooltip,Avatar } from "@mui/material"
+import { useState, useRef ,useEffect} from "react";
 import { useNavigate } from "react-router-dom";
 import Drawer from "@mui/material/Drawer";
 import SearchIcon from '@mui/icons-material/Search';
@@ -10,9 +10,11 @@ import HomeIcon from '@mui/icons-material/Home';
 import DiscountIcon from '@mui/icons-material/Discount';
 import ListIcon from '@mui/icons-material/List';
 import FavoriteIcon from '@mui/icons-material/Favorite';
+import PersonIcon from '@mui/icons-material/Person';
 import { Popper, Paper, List, ListItem, ListItemText } from '@mui/material';
 
-export const Header = ({ cartLength, favLength }) => {
+export const Header = ({ cartLength, favLength,user,message }) => {
+  console.log("message;",message)
   const [openLogin, setOpenLogin] = useState(false);
   const [openSignUp, setOpenSignUp] = useState(false);
   const [openNav, setOpenNav] = useState(false);
@@ -22,7 +24,7 @@ export const Header = ({ cartLength, favLength }) => {
   const [passwordError, setPasswordError] = useState("");
   const [openSearch, setOpenSearch] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
-
+  const navigate=useNavigate()
   const navigateCart = useNavigate();
   const navigateHome = useNavigate();
   const navigateMenu = useNavigate(); // for individual menu item navigate
@@ -70,6 +72,14 @@ export const Header = ({ cartLength, favLength }) => {
     "Pizza", "Burger", "Pasta", "Fries", "Shavarma",
     "Ice Cream", "Juice", "Noodles", "Salad", "Dosa"
   ];
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Whenever message changes, check if it's success
+  useEffect(() => {
+    if (message === "success") {
+      setIsLoggedIn(true);
+    }
+  }, [message]);
 
   return (
     <Box>
@@ -115,8 +125,8 @@ export const Header = ({ cartLength, favLength }) => {
                     button
                     onClick={() => {
                       navigateMenu('/MenuItemDetails', { state: { category: dish } });
-                      console.log(dish); // ✅ logs the right category
-                      setAnchorEl(null); // ✅ close the menu
+                      console.log(dish); 
+                      setAnchorEl(null); 
                     }}
                   >
                   
@@ -140,42 +150,82 @@ export const Header = ({ cartLength, favLength }) => {
           </Box>
 
           <Box sx={{ display: "flex", alignItems: "center", gap: 2, color: 'white' }}>
-            <SearchIcon sx={{ fontSize: "30px", cursor: "pointer" }} onClick={() => setOpenSearch(true)} />
-            <Drawer anchor="right" open={openSearch} onClose={() => setOpenSearch(false)}>
-              <Box sx={{ width: { xs: 250, sm: 300 }, p: 3 }}>
-                <Typography variant="h6" gutterBottom>Search</Typography>
-                <TextField
-                  variant="outlined"
-                  placeholder="Search for Restaurent,Dish or Cuisine"
-                  fullWidth
-                  autoFocus
-                />
-              </Box>
-            </Drawer>
+            <Tooltip title="Search">
+              <SearchIcon sx={{ fontSize: "25px", cursor: "pointer" }} onClick={() => setOpenSearch(true)} />
+              <Drawer anchor="right" open={openSearch} onClose={() => setOpenSearch(false)}>
+                <Box sx={{ width: { xs: 250, sm: 300 }, p: 3 }}>
+                  <Typography variant="h6" gutterBottom>Search</Typography>
+                  <TextField
+                    variant="outlined"
+                    placeholder="Search for Restaurent,Dish or Cuisine"
+                    fullWidth
+                    autoFocus
+                  />
+                </Box>
+              </Drawer>
+            </Tooltip>
 
-            <Box sx={{ position: 'relative', display: 'inline-block' }}>
-              <ShoppingCartIcon onClick={() => navigateCart('/Cart')} sx={{ fontSize: "30px", color: 'white' }} />
-              <Box sx={{
-                width: "18px", height: "18px", bgcolor: "red", borderRadius: "50%",
-                border: '1px solid white', position: "absolute", top: "-10px", right: "-6px",
-                display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: "12px"
-              }}>
-                <Typography variant="caption" color="white">{cartLength}</Typography>
+            <Tooltip title="Cart">
+              <Box sx={{ position: 'relative', display: 'inline-block' }}>
+                <ShoppingCartIcon onClick={() => navigateCart('/Cart')} sx={{ fontSize: "25px", color: 'white' }} />
+                <Box sx={{
+                  width: "18px", height: "18px", bgcolor: "red", borderRadius: "50%",
+                  border: '1px solid white', position: "absolute", top: "-10px", right: "-6px",
+                  display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: "12px"
+                }}>
+                  <Typography variant="caption" color="white">{cartLength}</Typography>
+                </Box>
               </Box>
-            </Box>
+            </Tooltip>
 
-            <Box sx={{ position: 'relative', display: 'inline-block' }}>
-              <FavoriteIcon onClick={() => navigateCart('/Favourite')} sx={{ fontSize: "30px", color: 'white' }} />
-              <Box sx={{
-                width: "18px", height: "18px", bgcolor: "red", borderRadius: "50%",
-                border: '1px solid white', position: "absolute", top: "-10px", right: "-8px",
-                display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: "12px"
-              }}>
-                <Typography variant="caption" color="white">{favLength}</Typography>
-              </Box>
-            </Box>
+            <Tooltip title="Favourites">
+                  <Box sx={{ position: 'relative', display: 'inline-block' }}>
+                    <FavoriteIcon
+                      onClick={() => navigateCart('/Favourite')}
+                      sx={{ fontSize: "25px", color: 'white', cursor: 'pointer' }}
+                    />
+                    <Box
+                      sx={{
+                        width: "18px",
+                        height: "18px",
+                        bgcolor: "red",
+                        borderRadius: "50%",
+                        border: '1px solid white',
+                        position: "absolute",
+                        top: "-10px",
+                        right: "-8px",
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        fontSize: "12px"
+                      }}
+                    >
+                      <Typography variant="caption" color="white">
+                        {favLength}
+                      </Typography>
+                    </Box>
+                  </Box>
+            </Tooltip>
 
-            <AccountCircleIcon sx={{ fontSize: "30px" }} onClick={() => setOpenLogin(true)} />
+            <>
+      {message === "success" && user ? (
+        <Tooltip title={`Welcome ${user.username}`}>
+          <IconButton onClick={() => navigate("/account")}>
+            <Avatar sx={{ bgcolor: "#4caf50", fontSize: "14px", width: 30, height: 30 }}>
+              {user.username.charAt(0).toUpperCase()}
+            </Avatar>
+          </IconButton>
+        </Tooltip>
+      ) : (
+        <Tooltip title="Login">
+          <IconButton onClick={() => navigate("/auth")}>
+            {/* Person Icon here */}
+            <PersonIcon sx={{ fontSize: 30, color: "white" }} onClick={()=>navigate('/Account')} />
+          </IconButton>
+        </Tooltip>
+      )}
+    </>
+
             <IconButton sx={{ display: { xs: "block", md: "none" } }} onClick={() => setOpenNav(true)}>
               <MenuIcon sx={{ fontSize: "30px" }} />
             </IconButton>

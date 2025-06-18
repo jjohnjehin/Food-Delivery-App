@@ -16,15 +16,17 @@ import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import StarIcon from "@mui/icons-material/Star";
 import data from "./db.json";
 import FavoriteIcon from '@mui/icons-material/Favorite';
-
+import { useNavigate } from "react-router-dom";
 export const MenuItemDetails = ({ cart, setCart, fav = [], setFav}) => {
   const location = useLocation();
   const category = location.state?.category;
   const id = location.state?.id;
 
-  const filteredItems = data.filter((item) => item.category === category);
-  console.log(filteredItems)
-  const itemDetails = data.find((item) => item.id === id);
+  const filteredItems = data.products.filter((item) => item.category === category);
+
+const itemDetails = data.products.find((item) => item.id === id);
+
+
 
   const addToCart = (item) => {
     setCart([...cart, item]);
@@ -37,6 +39,7 @@ export const MenuItemDetails = ({ cart, setCart, fav = [], setFav}) => {
       setFav([...fav, item]);
     }
   };
+  const navigate=useNavigate()
   return (
     <Box
       sx={{
@@ -193,76 +196,106 @@ export const MenuItemDetails = ({ cart, setCart, fav = [], setFav}) => {
       >
         {filteredItems.map((item) => (
           <Card
-          key={item.id}
-          sx={{
-            width: { xs: "100%", sm: "200px" },
-            height: { lg: "400px", sm: "400px", xs: "auto" },
-            borderRadius: "10px",
-            boxShadow: 3,
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-            position: 'relative', // ✅ Add this line
-            transition: "transform 0.3s ease-in-out",
-            "&:hover": {
-              transform: "translate(-10px, -10px)",
-            },
-          }}
-        >
-          {/* ❤️ Favorite icon - moved here */}
-          <FavoriteIcon
-            onClick={() => toggleFav(item)}
-            sx={{
-              color: fav.some(f => f.id === item.id) ? "red" : "white",
-              position: 'absolute',
-              top: '10px',
-              right: '10px',
-              zIndex: 2,
-              backgroundColor: 'rgba(0,0,0,0.4)',
-              borderRadius: '50%',
-              padding: '5px',
-              cursor: 'pointer'
-            }}
-          />
-          
-          <CardMedia
-            component="img"
-            sx={{ height: "180px", objectFit: "cover" }}
-            image={item.image}
-            alt={item.dish_name}
-          />
-        
-          <CardContent
-            sx={{
-              flexGrow: 1,
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-evenly",
-              alignItems: "flex-start",
-              textAlign: "center",
-              p: 2,
-            }}
-          >
-            <Typography fontWeight="bold">{item.restaurant_name}</Typography>
-            <Typography variant="subtitle1" color="text.secondary">
-              {item.dish_name}
-            </Typography>
-            <Typography variant="body2">⭐ {item.rating}</Typography>
-            <Typography
-              variant="h6"
-              sx={{ color: "green", marginTop: "10px" }}
+              key={item.id}
+              sx={{
+                width: { lg: "280px", sm: "280px", xs: "280px" },
+                height: "330px",
+                boxShadow: 3,
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-around",
+                position: 'relative',
+                transition: "transform 0.3s ease-in-out",
+                "&:hover": {
+                  transform: "translate(-10px, -10px)",
+                },
+              }}
             >
-              ₹{item.price}
-            </Typography>
-            <Button
-              variant="contained"
-              sx={{ bgcolor: "orange", mt: 1 }}
-              onClick={() => addToCart(item)}
-            >
-              Add to Cart
-            </Button>
-          </CardContent>
-        </Card>
+              <FavoriteIcon
+                onClick={() => toggleFav(item)}
+                sx={{
+                  color: fav.some(f => f.id === item.id) ? "red" : "white",
+                  position: 'absolute',
+                  top: '10px',
+                  right: '10px',
+                  zIndex: 2,
+                  backgroundColor: 'rgba(0,0,0,0.4)',
+                  borderRadius: '50%',
+                  padding: '5px',
+                  cursor: 'pointer'
+                }}
+              />
+
+              <CardMedia
+                component="img"
+                sx={{ height: "130px", objectFit: "cover" }}
+                image={item.image}
+                alt={item.dish_name}
+              />
+
+              <CardContent
+                sx={{
+                  flexGrow: 1,
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-evenly",
+                  alignItems: "flex-start",
+                  textAlign: "center",
+                  p: 2,
+                }}
+              >
+                <Typography fontWeight="bold">{item.restaurant_name}</Typography>
+                <Typography variant="subtitle1" color="text.secondary">
+                  {item.dish_name}
+                </Typography>
+                <Typography variant="body2">⭐ {item.rating}</Typography>
+                <Typography
+                  variant="h6"
+                  sx={{ color: "green", marginTop: "10px" }}
+                >
+                  ₹{item.price}
+                </Typography>
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: { xs: "column", sm: "row" },
+                    gap: 1,
+                    mt: 1,
+                    width: "100%",
+                  }}
+                >
+                  <Button
+                    variant="contained"
+                    sx={{
+                      bgcolor: "white",
+                      color: "orange",
+                      width: { xs: "100%", sm: "auto" },
+                      fontWeight: "700"
+                    }}
+                    onClick={() => addToCart(item)}
+                  >
+                    Add to Cart
+                  </Button>
+                  <Button
+                    variant="contained"
+                    sx={{
+                      bgcolor: "white",
+                      color: "green",
+                      width: { xs: "100%", sm: "auto" },
+                      fontWeight: "700"
+                    }}
+                    onClick={() => {
+                      console.log(item?.price);
+                      navigate("/Payment", {
+                        state: { category: item?.price, id: item?.id }
+                      });
+                    }}
+                  >
+                    Buy Now
+                  </Button>
+                </Box>
+              </CardContent>
+            </Card>
         
         ))}
       </Box>
