@@ -2,6 +2,7 @@
   "name": "food",
   "version": "0.1.0",
   "private": true,
+  "proxy": "http://localhost:5000",
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
@@ -12,12 +13,13 @@
     "@testing-library/react": "^16.2.0",
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.8.4",
-    "framer-motion": "^12.6.2",
+    "framer-motion": "^12.19.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.4.0",
     "react-scripts": "5.0.1",
     "react-slick": "^0.30.3",
+    "recharts": "^3.0.2",
     "slick-carousel": "^1.8.1",
     "swiper": "^9.4.1",
     "web-vitals": "^2.1.4"

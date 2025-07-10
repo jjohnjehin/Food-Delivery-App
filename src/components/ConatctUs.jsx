@@ -1,9 +1,12 @@
 import React from 'react';
 import { Box, Grid, Typography, TextField, Button, Paper } from '@mui/material';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import PhoneIcon from '@mui/icons-material/Phone';
+import EmailIcon from '@mui/icons-material/Email';
 
 export const ContactUs = () => {
   return (
-    <Box sx={{ p: { xs: 2, md: 6 }, backgroundColor: '#f9f9f9',marginTop:'130px' }}>
+    <Box sx={{ p: { xs: 2, md: 6 }, backgroundColor: '#f9f9f9',marginTop:'100px' }}>
       <Paper elevation={3} sx={{ p: 4, borderRadius: 4 }}>
         <Typography variant="h4" sx={{ mb: 4, textAlign: 'center', fontWeight: 'bold' }}>
           Contact Us
@@ -34,14 +37,14 @@ export const ContactUs = () => {
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
               Get in Touch
             </Typography>
-            <Typography variant="body1" sx={{ mb: 1 }}>
-              📍 Address: 123 Food Street, Nagercoil City, Kanyakumari
+            <Typography variant="body1" sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+              <LocationOnIcon fontSize="small" /> Address: 123 Food Street, Nagercoil City, Kanyakumari
             </Typography>
-            <Typography variant="body1" sx={{ mb: 1 }}>
-              📞 Phone: +91 98765 43210
+            <Typography variant="body1" sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+              <PhoneIcon fontSize="small" /> Phone: +91 98765 43210
             </Typography>
-            <Typography variant="body1" sx={{ mb: 1 }}>
-              📧 Email: support@freshfeast.com
+            <Typography variant="body1" sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+              <EmailIcon fontSize="small" /> Email: support@freshfeast.com
             </Typography>
 
             {/* Optional: Google Map Embed */}

@@ -15,6 +15,7 @@ import {
 import { useState } from 'react';
 import HomeIcon from "@mui/icons-material/Home";
 import { useNavigate } from 'react-router-dom';
+import PhoneIcon from "@mui/icons-material/Phone";
 
 export const PaymentDetails=()=> {
       const [drawerOpen, setDrawerOpen] = useState(false);
@@ -85,8 +86,8 @@ export const PaymentDetails=()=> {
               <Typography fontSize="12px" color="text.secondary">
                 {address.street}, {address.city} - {address.pincode}
               </Typography>
-              <Typography fontSize="12px" color="text.secondary">
-                📞 {address.phone}
+              <Typography fontSize="12px" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <PhoneIcon fontSize="small" sx={{ mr: 0.5 }} />{address.phone}
               </Typography>
             </>
           ) : (
@@ -145,7 +146,7 @@ export const PaymentDetails=()=> {
             setAddressSaved(true);
             setDrawerOpen(false);
           } else {
-            alert("Please fill in all fields 🚨");
+            alert("Please fill in all fields.");
           }
         }}
       >

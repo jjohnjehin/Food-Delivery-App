@@ -1,11 +1,49 @@
 import React, { useState, useEffect } from "react";
-import { Box, Typography, Button, Divider, TextField,Drawer } from "@mui/material";
+import { 
+  Box, 
+  Typography, 
+  Button, 
+  Divider, 
+  TextField, 
+  Drawer, 
+  IconButton,
+  Card,
+  CardContent,
+  Chip,
+  Avatar,
+  Badge,
+  Fade,
+  Slide,
+  Alert,
+  Snackbar,
+  Fab,
+  Tooltip
+} from "@mui/material";
 import HomeIcon from "@mui/icons-material/Home";
+import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import DeleteIcon from "@mui/icons-material/Delete";
+import AddIcon from "@mui/icons-material/Add";
+import RemoveIcon from "@mui/icons-material/Remove";
+import FavoriteIcon from "@mui/icons-material/Favorite";
+import LocalOfferIcon from "@mui/icons-material/LocalOffer";
+import PaymentIcon from "@mui/icons-material/Payment";
+import LocationOnIcon from "@mui/icons-material/LocationOn";
 import { useNavigate } from "react-router-dom";
+import { appColors, colorUtils } from "../theme/colors";
 
 export const Cart = ({ cart, removeFromCart, setCart }) => {
-  const navigate=useNavigate()
+  const navigate = useNavigate();
   const [quantities, setQuantities] = useState({});
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [addressSaved, setAddressSaved] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
+  const [address, setAddress] = useState({
+    name: "",
+    phone: "",
+    street: "",
+    city: "",
+    pincode: "",
+  });
 
   useEffect(() => {
     const initialQuantities = {};
@@ -34,357 +72,605 @@ export const Cart = ({ cart, removeFromCart, setCart }) => {
       total + Number(item.price) * (quantities[item.id] || 1),
     0
   );
-  const [drawerOpen, setDrawerOpen] = useState(false);
-const [addressSaved, setAddressSaved] = useState(false);
-const [address, setAddress] = useState({
-  name: "",
-  phone: "",
-  street: "",
-  city: "",
-  pincode: "",
-});
 
+  const deliveryFee = 74;
+  const discount = 66;
+  const gst = 77.44;
+  const finalTotal = totalPrice + deliveryFee - discount + gst;
+
+  const handleRemoveItem = (item) => {
+    removeFromCart(item);
+    setSnackbar({
+      open: true,
+      message: `${item.dish_name} removed from cart`,
+      severity: "info"
+    });
+  };
+
+  const handleSaveAddress = () => {
+    const allFilled = Object.values(address).every((val) => val.trim() !== "");
+    if (allFilled) {
+      setAddressSaved(true);
+      setDrawerOpen(false);
+      setSnackbar({
+        open: true,
+        message: "Delivery address saved successfully!",
+        severity: "success"
+      });
+    } else {
+      setSnackbar({
+        open: true,
+        message: "Please fill in all fields",
+        severity: "error"
+      });
+    }
+  };
+
+  const handleProceedToPayment = () => {
+    if (!addressSaved) {
+      setSnackbar({
+        open: true,
+        message: "Please add delivery address first",
+        severity: "warning"
+      });
+      return;
+    }
+    navigate('/Payment', {
+      state: {
+        category: finalTotal
+      }
+    });
+  };
 
   return (
     <Box
       sx={{
         width: "100%",
         minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",marginTop:"30px"
+        backgroundColor: appColors.background.secondary,
+        pt: { xs: 2, md: 4 },
+        pb: 4,
+        marginTop: "100px"
       }}
     >
-      <Box sx={{ width: "100%", height: "100px" }} />
-
+      {/* Header */}
       <Box
         sx={{
-          width: "90%",
-          display: "flex",
-          justifyContent: "space-between",
-          flexDirection: { xs: "column", md: "row" },
-          gap: 2,
+          width: "100%",
+          maxWidth: "1200px",
+          mx: "auto",
+          px: { xs: 2, md: 4 },
+          mb: 4
         }}
       >
-        {/* LEFT COLUMN */}
-        <Box sx={{ width: { xs: "100%", md: "70%" }, pr: { md: 2 } }}>
-          {cart.length === 0 ? (
-            <Typography variant="h6" align="center">
-              🛒 No items in cart
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 2,
+            mb: 3
+          }}
+        >
+          <Avatar
+            sx={{
+              bgcolor: appColors.primary.main,
+              width: 48,
+              height: 48
+            }}
+          >
+            <ShoppingCartIcon />
+          </Avatar>
+          <Box>
+            <Typography variant="h4" fontWeight="bold" color={appColors.text.primary}>
+              Your Cart
             </Typography>
-          ) : (
-            cart.map((item, index) => (
-              <Box
-                key={index}
+            <Typography variant="body2" color={appColors.text.secondary}>
+              {cart.length} items • Total: ₹{finalTotal.toFixed(2)}
+            </Typography>
+          </Box>
+        </Box>
+
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: { xs: "column", lg: "row" },
+            gap: 3
+          }}
+        >
+          {/* Cart Items */}
+          <Box sx={{ flex: 1 }}>
+            {cart.length === 0 ? (
+              <Card
                 sx={{
-                  width: "100%",
-                  display: "flex",
-                  flexDirection: { xs: "column", sm: "row" },
-                  alignItems: "center",
-                  mb: 2,
-                  p: 2,
-                  border: "1px solid #ccc",
-                  borderRadius: 2,
-                  backgroundColor: "#fff",
-                  boxShadow: 2,
-                  justifyContent: "space-between",
-                  gap: 2,
+                  textAlign: "center",
+                  py: 8,
+                  backgroundColor: appColors.background.primary,
+                  boxShadow: 3
                 }}
               >
-                <Box sx={{ width: { xs: "100%", sm: "10%" } }}>
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    style={{
-                      width: "100%",
-                      height: "80px",
-                      objectFit: "cover",
-                      borderRadius: "8px",
-                    }}
-                  />
-                </Box>
-
-                <Box sx={{ width: { xs: "100%", sm: "20%" } }}>
-                  <Typography fontWeight="bold">{item.dish_name}</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {item.restaurant_name}
-                  </Typography>
-                </Box>
-
-                <Box sx={{ width: { xs: "100%", sm: "20%" } }}>
-                  <Typography variant="caption" color="text.secondary">
-                    {item.slogan}
-                  </Typography>
-                </Box>
-
-                <Box
+                <ShoppingCartIcon
                   sx={{
-                    width: { xs: "100%", sm: "10%" },
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
+                    fontSize: 64,
+                    color: appColors.text.secondary,
+                    mb: 2
+                  }}
+                />
+                <Typography variant="h6" color={appColors.text.secondary} mb={2}>
+                  Your cart is empty
+                </Typography>
+                <Typography variant="body2" color={appColors.text.secondary} mb={3}>
+                  Add some delicious items to get started
+                </Typography>
+                <Button
+                  variant="contained"
+                  onClick={() => navigate('/')}
+                  sx={{
+                    bgcolor: appColors.primary.main,
+                    color: appColors.text.inverse,
+                    px: 4,
+                    py: 1.5,
+                    borderRadius: 2
                   }}
                 >
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    onClick={() => increaseQty(item.id)}
-                  >
-                    +
-                  </Button>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    onClick={() => decreaseQty(item.id)}
-                    sx={{ mt: 1 }}
-                  >
-                    -
-                  </Button>
+                  Start Shopping
+                </Button>
+              </Card>
+            ) : (
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                {cart.map((item, index) => (
+                  <Slide direction="up" in={true} timeout={300 + index * 100}>
+                    <Card
+                      key={index}
+                      sx={{
+                        backgroundColor: appColors.background.primary,
+                        boxShadow: 3,
+                        borderRadius: 3,
+                        overflow: "hidden",
+                        transition: "all 0.3s ease",
+                        "&:hover": {
+                          transform: "translateY(-2px)",
+                          boxShadow: 6
+                        }
+                      }}
+                    >
+                      <CardContent sx={{ p: 3 }}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            flexDirection: { xs: "column", sm: "row" },
+                            alignItems: { xs: "center", sm: "flex-start" },
+                            gap: 3
+                          }}
+                        >
+                          {/* Item Image */}
+                          <Box
+                            sx={{
+                              width: { xs: "120px", sm: "100px" },
+                              height: { xs: "120px", sm: "100px" },
+                              position: "relative",
+                              flexShrink: 0
+                            }}
+                          >
+                            <img
+                              src={item.image}
+                              alt={item.dish_name}
+                              style={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover",
+                                borderRadius: "12px"
+                              }}
+                            />
+                            <Chip
+                              label={`₹${item.price}`}
+                              size="small"
+                              sx={{
+                                position: "absolute",
+                                top: 8,
+                                right: 8,
+                                bgcolor: appColors.accent.red,
+                                color: appColors.text.inverse,
+                                fontWeight: "bold"
+                              }}
+                            />
+                          </Box>
+
+                          {/* Item Details */}
+                          <Box sx={{ flex: 1, minWidth: 0 }}>
+                            <Typography variant="h6" fontWeight="bold" mb={1}>
+                              {item.dish_name}
+                            </Typography>
+                            <Typography variant="body2" color={appColors.text.secondary} mb={1}>
+                              {item.restaurant_name}
+                            </Typography>
+                            <Typography variant="caption" color={appColors.text.secondary} mb={2}>
+                              {item.slogan}
+                            </Typography>
+
+                            {/* Quantity Controls */}
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 2,
+                                mb: 2
+                              }}
+                            >
+                              <Typography variant="body2" fontWeight="bold">
+                                Quantity:
+                              </Typography>
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  border: `1px solid ${appColors.text.disabled}`,
+                                  borderRadius: 2,
+                                  overflow: "hidden"
+                                }}
+                              >
+                                <IconButton
+                                  size="small"
+                                  onClick={() => decreaseQty(item.id)}
+                                  sx={{
+                                    borderRadius: 0,
+                                    "&:hover": {
+                                      bgcolor: appColors.background.secondary
+                                    }
+                                  }}
+                                >
+                                  <RemoveIcon fontSize="small" />
+                                </IconButton>
+                                <Typography
+                                  sx={{
+                                    px: 2,
+                                    py: 1,
+                                    minWidth: "40px",
+                                    textAlign: "center",
+                                    fontWeight: "bold"
+                                  }}
+                                >
+                                  {quantities[item.id] || 1}
+                                </Typography>
+                                <IconButton
+                                  size="small"
+                                  onClick={() => increaseQty(item.id)}
+                                  sx={{
+                                    borderRadius: 0,
+                                    "&:hover": {
+                                      bgcolor: appColors.background.secondary
+                                    }
+                                  }}
+                                >
+                                  <AddIcon fontSize="small" />
+                                </IconButton>
+                              </Box>
+                            </Box>
+
+                            {/* Price and Actions */}
+                            <Box
+                              sx={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                                flexWrap: "wrap",
+                                gap: 2
+                              }}
+                            >
+                              <Typography variant="h6" fontWeight="bold" color={appColors.primary.main}>
+                                ₹{Number(item.price) * (quantities[item.id] || 1)}
+                              </Typography>
+                              <Box sx={{ display: "flex", gap: 1 }}>
+                                <Tooltip title="Add to favorites">
+                                  <IconButton
+                                    size="small"
+                                    sx={{
+                                      bgcolor: appColors.background.secondary,
+                                      "&:hover": {
+                                        bgcolor: appColors.accent.yellow
+                                      }
+                                    }}
+                                  >
+                                    <FavoriteIcon fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Remove from cart">
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => handleRemoveItem(item)}
+                                    sx={{
+                                      bgcolor: appColors.button.danger,
+                                      color: appColors.text.inverse,
+                                      "&:hover": {
+                                        bgcolor: appColors.accent.red
+                                      }
+                                    }}
+                                  >
+                                    <DeleteIcon fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
+                              </Box>
+                            </Box>
+                          </Box>
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  </Slide>
+                ))}
+              </Box>
+            )}
+          </Box>
+
+          {/* Order Summary */}
+          <Box sx={{ width: { xs: "100%", lg: "400px" } }}>
+            <Card
+              sx={{
+                backgroundColor: appColors.background.primary,
+                boxShadow: 3,
+                borderRadius: 3,
+                position: "sticky",
+                top: 20
+              }}
+            >
+              <CardContent sx={{ p: 3 }}>
+                <Typography variant="h6" fontWeight="bold" mb={3}>
+                  Order Summary
+                </Typography>
+
+                {/* Delivery Address */}
+                <Box
+                  onClick={() => setDrawerOpen(true)}
+                  sx={{
+                    border: `2px dashed ${appColors.text.disabled}`,
+                    borderRadius: 2,
+                    p: 2,
+                    mb: 3,
+                    cursor: "pointer",
+                    transition: "all 0.3s ease",
+                    "&:hover": {
+                      borderColor: appColors.primary.main,
+                      bgcolor: appColors.background.secondary
+                    }
+                  }}
+                >
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}>
+                    <LocationOnIcon color="action" />
+                    <Typography fontWeight="bold" fontSize="14px">
+                      Delivery Address
+                    </Typography>
+                  </Box>
+                  {addressSaved ? (
+                    <Box>
+                      <Typography fontWeight="bold" fontSize="14px" mb={0.5}>
+                        {address.name}
+                      </Typography>
+                      <Typography fontSize="12px" color={appColors.text.secondary} mb={0.5}>
+                        {address.street}, {address.city} - {address.pincode}
+                      </Typography>
+                      <Typography fontSize="12px" color={appColors.text.secondary}>
+                        📞 {address.phone}
+                      </Typography>
+                    </Box>
+                  ) : (
+                    <Typography fontSize="14px" color={appColors.text.secondary}>
+                      Click to add delivery address
+                    </Typography>
+                  )}
                 </Box>
 
-                <Box sx={{ width: { xs: "100%", sm: "10%" }, textAlign: "center" }}>
-                  <Typography variant="h6">
-                    {quantities[item.id] || 1}
+                {/* Special Instructions */}
+                <TextField
+                  fullWidth
+                  placeholder="💬 Any special instructions?"
+                  variant="outlined"
+                  size="small"
+                  multiline
+                  rows={2}
+                  sx={{ mb: 3 }}
+                />
+
+                {/* No-contact Delivery */}
+                <Box
+                  sx={{
+                    border: `1px solid ${appColors.text.disabled}`,
+                    borderRadius: 2,
+                    p: 2,
+                    mb: 3,
+                    bgcolor: appColors.background.secondary
+                  }}
+                >
+                  <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2 }}>
+                    <input type="checkbox" />
+                    <Box>
+                      <Typography fontSize="14px" fontWeight="bold" mb={0.5}>
+                        No-contact Delivery
+                      </Typography>
+                      <Typography fontSize="12px" color={appColors.text.secondary}>
+                        Partner will safely place the order outside your door
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Box>
+
+                {/* Coupon */}
+                <Box
+                  sx={{
+                    border: `2px dashed ${appColors.text.disabled}`,
+                    borderRadius: 2,
+                    p: 2,
+                    mb: 3,
+                    cursor: "pointer",
+                    transition: "all 0.3s ease",
+                    "&:hover": {
+                      borderColor: appColors.accent.red,
+                      bgcolor: appColors.background.secondary
+                    }
+                  }}
+                >
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                    <LocalOfferIcon color="action" />
+                    <Typography fontWeight="bold" fontSize="14px">
+                      Apply Coupon
+                    </Typography>
+                  </Box>
+                </Box>
+
+                {/* Bill Details */}
+                <Typography fontWeight="bold" fontSize="16px" mb={2}>
+                  Bill Details
+                </Typography>
+
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 1, mb: 3 }}>
+                  <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                    <Typography fontSize="14px">Item Total</Typography>
+                    <Typography fontSize="14px">₹{totalPrice.toFixed(2)}</Typography>
+                  </Box>
+                  <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                    <Typography fontSize="14px">Delivery Fee</Typography>
+                    <Typography fontSize="14px">₹{deliveryFee}</Typography>
+                  </Box>
+                  <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                    <Typography fontSize="14px" color={appColors.status.success}>
+                      Discount
+                    </Typography>
+                    <Typography fontSize="14px" color={appColors.status.success}>
+                      -₹{discount}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                    <Typography fontSize="14px">GST & Charges</Typography>
+                    <Typography fontSize="14px">₹{gst}</Typography>
+                  </Box>
+                </Box>
+
+                <Divider sx={{ my: 2 }} />
+
+                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
+                  <Typography fontWeight="bold" fontSize="18px">
+                    Total Amount
                   </Typography>
-                </Box>
-
-                <Box sx={{ width: { xs: "100%", sm: "10%" }, textAlign: "center" }}>
-                  <Typography variant="h6">
-                    ₹{Number(item.price) * (quantities[item.id] || 1)}
+                  <Typography fontWeight="bold" fontSize="20px" color={appColors.primary.main}>
+                    ₹{finalTotal.toFixed(2)}
                   </Typography>
                 </Box>
 
                 <Button
                   variant="contained"
-                  sx={{ bgcolor: "red" }}
-                  onClick={() => removeFromCart(item.id)}
+                  fullWidth
+                  size="large"
+                  onClick={handleProceedToPayment}
+                  disabled={!addressSaved}
+                  sx={{
+                    bgcolor: appColors.primary.main,
+                    color: appColors.text.inverse,
+                    py: 1.5,
+                    borderRadius: 2,
+                    fontSize: "16px",
+                    fontWeight: "bold",
+                    "&:disabled": {
+                      bgcolor: appColors.text.disabled
+                    }
+                  }}
                 >
-                  Remove
+                  <PaymentIcon sx={{ mr: 1 }} />
+                  Proceed to Payment
                 </Button>
-              </Box>
-            ))
-          )}
-        </Box>
-
-        {/* RIGHT COLUMN */}
-        <Box
-          sx={{
-            width: { xs: "100%", md: "23%" },
-            p: 3,
-            border: "1px solid #ccc",
-            borderRadius: 2,
-            backgroundColor: "#fff",
-            boxShadow: 2,
-            height: "fit-content",
-            fontFamily: "sans-serif",
-          }}
-        >
-          <Box
-  onClick={() => setDrawerOpen(true)}
-  sx={{
-    border: "1px dashed #aaa",
-    borderRadius: 1,
-    p: 1.5,
-    mb: 2,
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    gap: 1,
-    backgroundColor: "#f9f9f9",
-  }}
->
-  <HomeIcon color="action" />
-  <Box>
-    {addressSaved ? (
-      <>
-        <Typography fontWeight="bold" fontSize="14px">
-          Deliver to: {address.name}
-        </Typography>
-        <Typography fontSize="12px" color="text.secondary">
-          {address.street}, {address.city} - {address.pincode}
-        </Typography>
-        <Typography fontSize="12px" color="text.secondary">
-          📞 {address.phone}
-        </Typography>
-      </>
-    ) : (
-      <Typography fontWeight="bold" fontSize="14px">
-        ➕ Add Delivery Address
-      </Typography>
-    )}
-  </Box>
-</Box>
-<Drawer
-  anchor="right"
-  open={drawerOpen}
-  onClose={() => setDrawerOpen(false)}
-  PaperProps={{
-    sx: {
-      width: { xs: "100%", sm: 400 }, // Full screen on mobile
-    },
-  }}
->
-  <Box sx={{ p: 3 }}>
-    <Typography variant="h6" mb={2}>Enter Delivery Address</Typography>
-
-    <TextField
-      fullWidth
-      label="Name"
-      variant="outlined"
-      size="small"
-      sx={{ mb: 2 }}
-      value={address.name}
-      onChange={(e) => setAddress({ ...address, name: e.target.value })}
-    />
-    <TextField
-      fullWidth
-      label="Phone"
-      variant="outlined"
-      size="small"
-      sx={{ mb: 2 }}
-      value={address.phone}
-      onChange={(e) => setAddress({ ...address, phone: e.target.value })}
-    />
-    <TextField
-      fullWidth
-      label="Street Address"
-      variant="outlined"
-      size="small"
-      sx={{ mb: 2 }}
-      value={address.street}
-      onChange={(e) => setAddress({ ...address, street: e.target.value })}
-    />
-    <TextField
-      fullWidth
-      label="City"
-      variant="outlined"
-      size="small"
-      sx={{ mb: 2 }}
-      value={address.city}
-      onChange={(e) => setAddress({ ...address, city: e.target.value })}
-    />
-    <TextField
-      fullWidth
-      label="Pincode"
-      variant="outlined"
-      size="small"
-      sx={{ mb: 2 }}
-      value={address.pincode}
-      onChange={(e) => setAddress({ ...address, pincode: e.target.value })}
-    />
-
-    <Button
-      variant="contained"
-      color="primary"
-      fullWidth
-      onClick={() => {
-        const allFilled = Object.values(address).every((val) => val.trim() !== "");
-        if (allFilled) {
-          setAddressSaved(true);
-          setDrawerOpen(false);
-        } else {
-          alert("Please fill in all fields 🚨");
-        }
-      }}
-    >
-      Save Delivery Address
-    </Button>
-  </Box>
-</Drawer>
-
-
-          <TextField
-            fullWidth
-            placeholder="💬 Any suggestions? We will pass it on..."
-            variant="standard"
-            InputProps={{
-              disableUnderline: true,
-              style: {
-                fontSize: "14px",
-                padding: "4px 0",
-              },
-            }}
-            sx={{
-              mb: 2,
-              backgroundColor: "transparent",
-              "& input::placeholder": {
-                opacity: 1,
-              },
-            }}
-          />
-
-          <Box
-            sx={{
-              border: "1px solid #ddd",
-              borderRadius: 1,
-              p: 2,
-              mb: 2,
-            }}
-          >
-            <Box display="flex" alignItems="flex-start" gap={1}>
-              <input type="checkbox" />
-              <Typography fontSize="14px">
-                <strong>Opt in for No-contact Delivery</strong><br />
-                Unwell, or avoiding contact? Please select no-contact delivery.
-                Partner will safely place the order outside your door (not for COD).
-              </Typography>
-            </Box>
+              </CardContent>
+            </Card>
           </Box>
-
-          <Box
-            sx={{
-              border: "1px dashed #aaa",
-              borderRadius: 1,
-              p: 1.5,
-              mb: 2,
-              cursor: "pointer",
-            }}
-          >
-            <Typography fontWeight="bold" fontSize="14px">🧾 Apply Coupon</Typography>
-          </Box>
-
-          <Typography fontWeight="bold" fontSize="16px" mb={1}>Bill Details</Typography>
-
-          <Box display="flex" justifyContent="space-between" mb={1}>
-            <Typography fontSize="14px">Item Total</Typography>
-            <Typography fontSize="14px">₹{totalPrice}</Typography>
-          </Box>
-
-          <Box display="flex" justifyContent="space-between" mb={1}>
-            <Typography fontSize="14px">Delivery Fee | 12.1 kms</Typography>
-            <Typography fontSize="14px">₹74</Typography>
-          </Box>
-
-          <Box display="flex" justifyContent="space-between" mb={1}>
-            <Typography fontSize="14px">Extra discount for you</Typography>
-            <Typography fontSize="14px" color="green">-₹66</Typography>
-          </Box>
-
-          <Box display="flex" justifyContent="space-between" mb={1}>
-            <Typography fontSize="14px">Delivery Tip</Typography>
-            <Typography fontSize="14px" color="red" sx={{ cursor: "pointer" }}>Add tip</Typography>
-          </Box>
-
-          <Box display="flex" justifyContent="space-between" mb={2}>
-            <Typography fontSize="14px">GST & Other Charges</Typography>
-            <Typography fontSize="14px">₹77.44</Typography>
-          </Box>
-
-          <Divider sx={{ my: 1 }} />
-
-          <Box display="flex" justifyContent="space-between" alignItems="center">
-            <Typography fontWeight="bold" fontSize="16px">TO PAY</Typography>
-            <Typography fontWeight="bold" fontSize="18px">
-              ₹{totalPrice + 74 - 66 + 77.44}
-            </Typography>
-          </Box>
-          <Button variant="contained" sx={{bgcolor:"green",marginTop:"10px"}} onClick={()=>navigate('/Payment',{
-              state: {
-                category: totalPrice+74-66+77.44
-              }
-            })}>proceed with All</Button>
         </Box>
       </Box>
+
+      {/* Address Drawer */}
+      <Drawer
+        anchor="right"
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        PaperProps={{
+          sx: {
+            width: { xs: "100%", sm: 400 },
+            p: 3
+          },
+        }}
+      >
+        <Typography variant="h6" mb={3}>
+          Delivery Address
+        </Typography>
+
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mb: 3 }}>
+          <TextField
+            fullWidth
+            label="Full Name"
+            variant="outlined"
+            size="small"
+            value={address.name}
+            onChange={(e) => setAddress({ ...address, name: e.target.value })}
+          />
+          <TextField
+            fullWidth
+            label="Phone Number"
+            variant="outlined"
+            size="small"
+            value={address.phone}
+            onChange={(e) => setAddress({ ...address, phone: e.target.value })}
+          />
+          <TextField
+            fullWidth
+            label="Street Address"
+            variant="outlined"
+            size="small"
+            multiline
+            rows={2}
+            value={address.street}
+            onChange={(e) => setAddress({ ...address, street: e.target.value })}
+          />
+          <TextField
+            fullWidth
+            label="City"
+            variant="outlined"
+            size="small"
+            value={address.city}
+            onChange={(e) => setAddress({ ...address, city: e.target.value })}
+          />
+          <TextField
+            fullWidth
+            label="Pincode"
+            variant="outlined"
+            size="small"
+            value={address.pincode}
+            onChange={(e) => setAddress({ ...address, pincode: e.target.value })}
+          />
+        </Box>
+
+        <Button
+          variant="contained"
+          fullWidth
+          size="large"
+          onClick={handleSaveAddress}
+          sx={{
+            bgcolor: appColors.primary.main,
+            color: appColors.text.inverse,
+            py: 1.5,
+            borderRadius: 2
+          }}
+        >
+          Save Address
+        </Button>
+      </Drawer>
+
+      {/* Snackbar */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

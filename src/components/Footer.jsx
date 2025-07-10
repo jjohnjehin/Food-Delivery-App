@@ -14,7 +14,7 @@ export const Footer=()=>{
           color: "white",
           padding: "40px 20px 10px",
           mt: 5,
-          width: "100%",
+          width: "97.5%",
           // display:"flex",
         }}
       >

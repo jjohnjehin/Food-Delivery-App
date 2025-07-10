@@ -14,52 +14,59 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import Slider from "react-slick";
 import { Footer } from "./Footer";
+import { appColors, colorUtils } from "../theme/colors";
+
 export const Item = ({ cart, setCart, fav = [], setFav }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const slogan = location.state?.slogan;
   const category = location.state?.category || "";
-  const image=location.state?.image
-  const restaurent_name=location.state?.restaurent_name
-  const dish_name=location.state?.dish_name
-  const price=location.state?.price
+  const id=location.state?.id
+  console.log("IDDDDDD:,",id);
+  console.log("categoryyyyyyy:,",category)
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [cardData, setCardData] = useState([]);
 
  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      setError("");
-      try {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        const response = await fetch("http://localhost:3001/products");
-        if (!response.ok) {
-          throw new Error("Failed to fetch data");
-        }
-        const result = await response.json();
-        console.log(result); // Log the result to check its structure
-        // Ensure result is an array
-        if (!Array.isArray(result)) {
-          throw new TypeError("Expected an array from the API response");
-        }
-        const filtered = category
-          ? result.filter(
-              (item) =>
-                item.category?.toLowerCase() === category.toLowerCase()
-            )
-          : result;
-        setCardData(filtered);
-        console.log(filtered);
-      } catch (err) {
-        setError(err.message || "Something went wrong");
-      } finally {
-        setLoading(false);
+  const fetchData = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const response = await fetch("http://localhost:5000/api/products");
+      if (!response.ok) {
+        throw new Error("Failed to fetch data");
       }
-    };
-    fetchData();
-  }, [category]);
+      const result = await response.json();
+      console.log(result); // Log the result to check its structure
+
+      // Check for expected nested structure
+      if (!Array.isArray(result) || !Array.isArray(result[0]?.products)) {
+        throw new TypeError("Expected products array inside response[0].products");
+      }
+
+      const allProducts = result[0].products;
+
+      const filtered = category
+        ? allProducts.filter(
+            (item) =>
+              item.category?.toLowerCase() === category.toLowerCase()
+          )
+        : allProducts;
+
+      setCardData(filtered);
+      console.log(filtered);
+    } catch (err) {
+      setError(err.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchData();
+}, [category]);
 
   const addToCart = (item) => {
     setCart([...cart, item]);
@@ -131,7 +138,7 @@ export const Item = ({ cart, setCart, fav = [], setFav }) => {
   return (
     <Box
       sx={{
-        mt: "120px",
+        mt: "100px",
         px: 2,
         width: "100%",
         display: "flex",
@@ -221,7 +228,7 @@ export const Item = ({ cart, setCart, fav = [], setFav }) => {
             <Card
               key={item.id}
               sx={{
-                width: { lg: "280px", sm: "280px", xs: "280px" },
+                width: "300px",
                 height: "330px",
                 boxShadow: 3,
                 display: "flex",
@@ -233,11 +240,18 @@ export const Item = ({ cart, setCart, fav = [], setFav }) => {
                   transform: "translate(-10px, -10px)",
                 },
               }}
+              onClick={() => {
+  console.log("ID:", item?.id);
+  console.log("Category:", item?.name); 
+  console.log("RESSS:",item?.restaurent_name)// Assuming item.name is your category
+  
+}}
+
             >
               <FavoriteIcon
                 onClick={() => toggleFav(item)}
                 sx={{
-                  color: fav.some(f => f.id === item.id) ? "red" : "white",
+                  color: colorUtils.getFavoriteColor(fav.some(f => f.id === item.id)),
                   position: 'absolute',
                   top: '10px',
                   right: '10px',
@@ -254,6 +268,17 @@ export const Item = ({ cart, setCart, fav = [], setFav }) => {
                 sx={{ height: "130px", objectFit: "cover" }}
                 image={item.image}
                 alt={item.dish_name}
+                onClick={navigate('/ExploreMenu',{
+    state: {
+      category: category,
+      slogan: item.slogan,
+      image: item.image,
+      restaurent_name: item.restaurent_name,
+      price: item.price,
+      dish_name: item.dish_name,
+      id: item.id,
+    }
+  })}
               />
 
               <CardContent
@@ -274,7 +299,7 @@ export const Item = ({ cart, setCart, fav = [], setFav }) => {
                 <Typography variant="body2">⭐ {item.rating}</Typography>
                 <Typography
                   variant="h6"
-                  sx={{ color: "green", marginTop: "10px" }}
+                  sx={{ color: colorUtils.getPriceColor(), marginTop: "10px" }}
                 >
                   ₹{item.price}
                 </Typography>
@@ -290,8 +315,8 @@ export const Item = ({ cart, setCart, fav = [], setFav }) => {
                   <Button
                     variant="contained"
                     sx={{
-                      bgcolor: "white",
-                      color: "orange",
+                      bgcolor: appColors.background.primary,
+                      color: appColors.primary.main,
                       width: { xs: "100%", sm: "auto" },
                       fontWeight: "700"
                     }}
@@ -302,8 +327,8 @@ export const Item = ({ cart, setCart, fav = [], setFav }) => {
                   <Button
                     variant="contained"
                     sx={{
-                      bgcolor: "white",
-                      color: "green",
+                      bgcolor: appColors.background.primary,
+                      color: appColors.secondary.main,
                       width: { xs: "100%", sm: "auto" },
                       fontWeight: "700"
                     }}

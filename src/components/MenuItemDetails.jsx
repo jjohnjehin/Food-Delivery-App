@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import {
   Box,
@@ -10,13 +10,23 @@ import {
   Stack,
   Chip,
   IconButton,
+  Tooltip,
+  Paper,
+  Container,
+  Zoom
 } from "@mui/material";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import StarIcon from "@mui/icons-material/Star";
 import data from "./db.json";
 import FavoriteIcon from '@mui/icons-material/Favorite';
+import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+import ViewIcon from "@mui/icons-material/Visibility";
+import CartIcon from "@mui/icons-material/ShoppingCart";
+import RestaurantIcon from "@mui/icons-material/Restaurant";
 import { useNavigate } from "react-router-dom";
+import { appColors, colorUtils } from "../theme/colors";
+
 export const MenuItemDetails = ({ cart, setCart, fav = [], setFav}) => {
   const location = useLocation();
   const category = location.state?.category;
@@ -43,12 +53,12 @@ const itemDetails = data.products.find((item) => item.id === id);
   return (
     <Box
       sx={{
-        mt: "120px",
-        px: 2,
         width: "100%",
+        minHeight: "100vh",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
+        marginTop: "100px"
       }}
     >
       {/* Details Section */}
@@ -198,7 +208,7 @@ const itemDetails = data.products.find((item) => item.id === id);
           <Card
               key={item.id}
               sx={{
-                width: { lg: "280px", sm: "280px", xs: "280px" },
+                width: "300px",
                 height: "330px",
                 boxShadow: 3,
                 display: "flex",
@@ -214,7 +224,7 @@ const itemDetails = data.products.find((item) => item.id === id);
               <FavoriteIcon
                 onClick={() => toggleFav(item)}
                 sx={{
-                  color: fav.some(f => f.id === item.id) ? "red" : "white",
+                  color: colorUtils.getFavoriteColor(fav.some(f => f.id === item.id)),
                   position: 'absolute',
                   top: '10px',
                   right: '10px',
